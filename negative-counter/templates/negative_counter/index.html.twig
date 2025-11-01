@@ -1,0 +1,212 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Калькулятор від'ємних чисел{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="main-card">
+            <div class="card-header-custom text-center">
+                <h1><i class="bi bi-calculator"></i> Калькулятор від'ємних чисел</h1>
+                <p class="mb-0">Підрахунок кількості від'ємних елементів у масиві</p>
+            </div>
+
+            <div class="card-body p-4">
+                {% for message in app.flashes('success') %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-pencil-square"></i> Введіть числа
+                            </div>
+                            <div class="card-body">
+                                {{ form_start(form) }}
+                                    <div class="mb-3">
+                                        {{ form_label(form.numbers, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                        {{ form_widget(form.numbers) }}
+                                        {{ form_errors(form.numbers) }}
+                                        <div class="form-text">
+                                            Введіть числа через кому. Наприклад: -5, 10, -3, 7, -1, 0, 15
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="bi bi-calculator"></i> Обчислити
+                                        </button>
+                                    </div>
+                                {{ form_end(form) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <i class="bi bi-shuffle"></i> Генератор випадкових чисел
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Кількість чисел:</label>
+                                    <input type="number" id="count" class="form-control" value="10" min="1" max="100">
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label fw-bold">Мінімум:</label>
+                                        <input type="number" id="min" class="form-control" value="-50">
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label fw-bold">Максимум:</label>
+                                        <input type="number" id="max" class="form-control" value="50">
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-warning" onclick="generateNumbers()">
+                                        <i class="bi bi-shuffle"></i> Згенерувати числа
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearNumbers()">
+                                        <i class="bi bi-x-circle"></i> Очистити
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-info-circle"></i> Інформація
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Як користуватися:</h5>
+                                <ol class="mb-3">
+                                    <li>Введіть числа вручну або згенеруйте випадкові</li>
+                                    <li>Натисніть кнопку "Обчислити"</li>
+                                    <li>Результат буде відображено нижче</li>
+                                    <li>Всі результати зберігаються в базі даних</li>
+                                </ol>
+
+                                <div class="alert alert-light border">
+                                    <strong>Приклад:</strong><br>
+                                    <code>-5, 10, -3, 7, -1, 0, 15</code><br>
+                                    <strong>Результат:</strong> 3 від'ємних числа
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if results|length > 0 %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-clock-history"></i> Історія обчислень
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Дата та час</th>
+                                                <th>Числа</th>
+                                                <th class="text-center">Кількість від'ємних</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for result in results %}
+                                                <tr>
+                                                    <td>
+                                                        <i class="bi bi-calendar3"></i>
+                                                        {{ result.createdAt|date('d.m.Y H:i') }}
+                                                    </td>
+                                                    <td class="font-monospace">{{ result.numbers }}</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-{% if result.negativeCount > 0 %}danger{% else %}secondary{% endif %} result-badge">
+                                                            {{ result.negativeCount }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card-footer text-center text-muted">
+                <small><i class="bi bi-building"></i> ЗНТУ | Аспірантура | 2025</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        function generateNumbers() {
+            const count = parseInt(document.getElementById('count').value);
+            const min = parseInt(document.getElementById('min').value);
+            const max = parseInt(document.getElementById('max').value);
+
+            if (count < 1 || count > 100) {
+                alert('Кількість чисел має бути від 1 до 100');
+                return;
+            }
+
+            if (min >= max) {
+                alert('Мінімальне значення має бути менше максимального');
+                return;
+            }
+
+            const numbers = [];
+            for (let i = 0; i < count; i++) {
+                const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                numbers.push(randomNumber);
+            }
+
+            const textarea = document.getElementById('number_array_numbers');
+            if (textarea) {
+                textarea.value = numbers.join(', ');
+
+                // Додаємо візуальний ефект
+                textarea.classList.add('border-success');
+                setTimeout(() => {
+                    textarea.classList.remove('border-success');
+                }, 1000);
+            }
+        }
+
+        function clearNumbers() {
+            const textarea = document.getElementById('number_array_numbers');
+            if (textarea) {
+                textarea.value = '';
+                textarea.focus();
+            }
+        }
+
+        // Додаємо можливість генерувати по Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = ['count', 'min', 'max'];
+            inputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            generateNumbers();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}
